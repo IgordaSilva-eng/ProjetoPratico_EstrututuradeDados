@@ -1,25 +1,37 @@
-# 🚀 Organizador de Tarefas Acadêmico — Análise de Performance
+# 🚀 Organizador de Tarefas Académico
 
-Este projeto foi desenvolvido como parte da **Missão Prática da disciplina de Estruturas de Dados I**. O objetivo é construir uma aplicação funcional que utilize estruturas de dados manuais e analise o impacto da complexidade algorítmica no desempenho do sistema.
+Este projeto foi desenvolvido como parte da **Missão Prática da disciplina de Estruturas de Dados I**. O objetivo é construir uma aplicação funcional que utilize estruturas de dados manuais para analisar o impacto da complexidade algorítmica no desempenho do sistema.
 
-## 🛠️ Tecnologias Utilizadas
-- **Linguagem:** Python 3.x
-- **Estruturas de Dados:** Lista Encadeada Simples (Implementação Manual)
-- **Persistência:** JSON para armazenamento de dados
+## 🛠️ Tecnologias e Conceitos Aplicados
+Para cumprir o rigor técnico da disciplina, o sistema evita o uso de funções nativas de alto nível (como `.sort()` ou listas dinâmicas prontas) e foca na implementação base:
 
-## 📋 Funcionalidades Principal (Fase 2)
-- **Criação de Tarefas:** Registro de atividades com títulos e níveis de prioridade.
-- **Ordenação por Prioridade:** Implementação de dois motores de ordenação manuais:
+- **Linguagem:** Python 3.10+
+- **Estrutura de Dados:** Lista Encadeada Simples (Implementação Manual via Classes e Nós).
+- **Persistência:** Serialização de dados em formato JSON.
+- **Algoritmos de Ordenação:**
   - **Merge Sort:** Algoritmo eficiente com complexidade $O(n \log n)$.
   - **Selection Sort:** Algoritmo de comparação com complexidade $O(n^2)$.
-- **Telemetria:** Monitoramento em tempo real do tempo de processamento (latência) de cada operação de ordenação.
 
-## 📊 Análise de Escalabilidade (Fase 3)
-O projeto inclui um script de estresse (`teste_escabilidade.py`) projetado para gerar grandes volumes de dados e validar as curvas de complexidade computacional.
-- **Objetivo:** Observar como o tempo de processamento cresce à medida que o volume de dados ($n$) aumenta, comparando a eficiência teórica com a prática.
+## 📋 Funcionalidades Principais
+1. **Criação de Tarefas:** Registo de atividades com título e prioridade (Urgente, Alta, Média, Baixa).
+2. **Motores de Ordenação:** Dois botões distintos para ordenar a fila de tarefas, permitindo comparar a performance.
+3. **Telemetria Integrada:** O sistema calcula e exibe o tempo exato (em milissegundos) que cada algoritmo levou para processar os dados.
+4. **Persistência:** Carregamento automático de tarefas existentes no ficheiro `tarefas.json`.
+
+## 📊 Análise de Escalabilidade e Performance
+O repositório inclui um script de teste de estresse (`teste_escabilidade.py`) para validar as curvas de complexidade computacional.
+
+
+
+Ao gerar volumes massivos de dados (ex: 5.000+ tarefas), é possível observar visualmente a eficiência do **Merge Sort** em relação ao **Selection Sort**, comprovando a teoria aprendida em aula através de telemetria real.
 
 ## 🚀 Como Executar
 
-1. **Aplicação Principal:**
-   ```bash
-   python index.py
+### Pré-requisitos
+* Python instalado (versão 3.10 ou superior).
+* Todos os ficheiros (`index.py` e `teste_escabilidade.py`) devem estar na mesma pasta.
+
+### Passo 1: Aplicação Principal
+Executa o menu interativo para gerir as tuas tarefas manualmente:
+```bash
+python index.py
