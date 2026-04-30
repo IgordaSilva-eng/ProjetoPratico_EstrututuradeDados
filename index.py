@@ -115,7 +115,7 @@ class OrganizadorTarefas:
         self.tarefas_encadeadas = ListaEncadeadaManual()
         self.tarefas_encadeadas.carregar_de_lista(lista_ordenada)
         fim = time.perf_counter()
-        print(f"⏱️ Merge Sort concluído em {(fim - inicio)*1000:.4f} ms.")
+        print(f"⏱️ Merge Sort concluído em {(fim - inicio)*1000:.4f} ms.", flush=True)
 
     def ordenar_com_selection_sort(self):
         inicio = time.perf_counter()
@@ -124,7 +124,7 @@ class OrganizadorTarefas:
         self.tarefas_encadeadas = ListaEncadeadaManual()
         self.tarefas_encadeadas.carregar_de_lista(lista_ordenada)
         fim = time.perf_counter()
-        print(f"⏱️ Selection Sort concluído em {(fim - inicio)*1000:.4f} ms.")
+        print(f"⏱️ Selection Sort concluído em {(fim - inicio)*1000:.4f} ms.", flush=True)
 
     def concluir_tarefa(self, id_tarefa):
         """Marca uma tarefa específica como concluída usando busca linear."""
