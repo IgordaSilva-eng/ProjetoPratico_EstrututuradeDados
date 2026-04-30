@@ -1,39 +1,43 @@
 import random
 import time
-from index import OrganizadorTarefas, merge_sort_tarefas, selection_sort_tarefas
+import sys
 
-def executar_stress_test(quantidade):
-    print(f"\n🚀 Iniciando Teste de Estresse com {quantidade} tarefas...")
-    
+from index import merge_sort_tarefas, selection_sort_tarefas
+
+def executar_comparativo_estatistico():
+    # Volumes graduais para mostrar a curva de crescimento
+    volumes = [8000, 10000, 15000, 25000] 
     prioridades = ["urgente", "alta", "média", "baixa"]
-    massa_dados = []
+    
+    print("="*50)
+    print("RELATORIO DE TELEMETRIA E ESCALABILIDADE")
+    print("="*50)
+    print(f"{'Volume (n)':<12} | {'Merge Sort':<15} | {'Selection Sort':<15}")
+    print("-" * 50)
 
-    # Gerando dados aleatórios
-    for i in range(quantidade):
-        massa_dados.append({
-            "id": i,
-            "titulo": f"Tarefa Aleatória {i}",
-            "prioridade": random.choice(prioridades)
-        })
+    for qtd in volumes:
+        # Gerar massa de dados única para ambos os testes
+        massa = [{"id": i, "titulo": "T", "prioridade": random.choice(prioridades)} for i in range(qtd)]
+        
+        # Teste Merge Sort (O(n log n))
+        copia_m = massa.copy()
+        t0 = time.perf_counter()
+        merge_sort_tarefas(copia_m)
+        t_merge = (time.perf_counter() - t0) * 1000
 
-    # --- Teste 1: Merge Sort (O(n log n)) ---
-    dados_merge = massa_dados.copy()
-    inicio = time.perf_counter()
-    merge_sort_tarefas(dados_merge)
-    fim = time.perf_counter()
-    tempo_merge = (fim - inicio) * 1000
-    print(f"✅ Merge Sort: {tempo_merge:.2f} ms")
+        # Teste Selection Sort (O(n^2))
+        copia_s = massa.copy()
+        t1 = time.perf_counter()
+        selection_sort_tarefas(copia_s)
+        t_selection = (time.perf_counter() - t1) * 1000
 
-    # --- Teste 2: Selection Sort (O(n²)) ---
-    dados_selection = massa_dados.copy()
-    inicio = time.perf_counter()
-    selection_sort_tarefas(dados_selection)
-    fim = time.perf_counter()
-    tempo_selection = (fim - inicio) * 1000
-    print(f"⚠️ Selection Sort: {tempo_selection:.2f} ms")
+        print(f"{qtd:<12} | {t_merge:>10.2f} ms | {t_selection:>10.2f} ms")
 
-    print(f"\n📊 Resultado: O Merge Sort foi {tempo_selection/tempo_merge:.1f}x mais rápido!")
+    print("="*50)
+    print("CONCLUSAO TECNICA:")
+    print("O Selection Sort cresce quadraticamente.")
+    print("Para volumes maiores, a diferenca sera exponencial.")
+    print("="*50)
 
 if __name__ == "__main__":
-    qtd = int(input("Quantas tarefas deseja gerar para o teste? (Sugestão: 5000): "))
-    executar_stress_test(qtd)
+    executar_comparativo_estatistico()
