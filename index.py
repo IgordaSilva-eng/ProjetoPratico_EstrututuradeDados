@@ -143,10 +143,12 @@ class OrganizadorTarefas:
         with open(self.ARQUIVO, 'w', encoding='utf-8') as f:
             json.dump(self.tarefas_encadeadas.para_lista_python(), f, indent=4)
 
-    def criar_tarefa(self, titulo, prioridade):
+    def criar_tarefa(self, titulo, prioridade, disciplina, prazo):
         tarefa = {
             "id": self.id_contador,
             "titulo": titulo,
+            "disciplina": disciplina,
+            "prazo": prazo,
             "prioridade": prioridade,
             "status": "pendente",
             "data_criacao": datetime.datetime.now().isoformat()
@@ -154,7 +156,7 @@ class OrganizadorTarefas:
         self.tarefas_encadeadas.inserir_no_final(tarefa)
         self.pilha_undo.push({"tipo": "criacao", "id": self.id_contador})
         self.id_contador += 1
-        print(f"✅ Tarefa '{titulo}' criada!")
+        print(f"✅ Tarefa '{titulo}' de {disciplina} (Entrega: {prazo}) criada!")
 
     def processar_e_ordenar(self):
         inicio = time.perf_counter()
