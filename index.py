@@ -228,14 +228,24 @@ def menu():
         op = input("Escolha: ")
         
         if op == "1":
-            tit = input("Título: ")
+            tit = input("Título da Tarefa: ")
+            disc = input("Disciplina: ")
+            prazo = input("Prazo de Entrega (dd/mm/aaaa): ")
             prio = input("Prioridade (urgente/alta/média/baixa): ").lower()
-            app.criar_tarefa(tit, prio)
+            # Chamada atualizada com disciplina e prazo
+            app.criar_tarefa(tit, prio, disc, prazo)
+
         elif op == "2":
             app.processar_e_ordenar()
+
         elif op == "3":
+            print("\n--- LISTA DE TAREFAS ACADÊMICAS ---")
             for t in app.tarefas_encadeadas.para_lista_python():
-                print(f"[{t['prioridade'].upper()}] ID {t['id']}: {t['titulo']} ({t['status']})")
+                # Exibição detalhada incluindo disciplina e prazo
+                info = f"[{t['prioridade'].upper()}] ID {t['id']}: {t['titulo']}"
+                detalhes = f" | Disciplina: {t['disciplina']} | Prazo: {t['prazo']} | Status: {t['status']}"
+                print(info + detalhes)
+                
         elif op == "4":
             id_sel = int(input("ID para concluir: "))
             app.concluir_tarefa(id_sel)
