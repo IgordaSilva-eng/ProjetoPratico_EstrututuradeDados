@@ -126,6 +126,31 @@ class OrganizadorTarefas:
         fim = time.perf_counter()
         print(f"⏱️ Selection Sort concluído em {(fim - inicio)*1000:.4f} ms.")
 
+    def concluir_tarefa(self, id_tarefa):
+        """Marca uma tarefa específica como concluída usando busca linear."""
+        atual = self.tarefas_encadeadas.cabeca
+        while atual:
+            if atual.dado['id'] == id_tarefa:
+                atual.dado['status'] = "concluída"
+                print(f"✔️ Tarefa {id_tarefa} marcada como CONCLUÍDA.")
+                return
+            atual = atual.proximo
+        print("❌ Erro: ID não encontrado.")
+
+    def arquivar_tarefa(self, id_tarefa):
+        """Altera o status para arquivado. Ela permanece na lista."""
+        atual = self.tarefas_encadeadas.cabeca
+        while atual:
+            if atual.dado['id'] == id_tarefa:
+                if atual.dado['status'] == "concluída":
+                    atual.dado['status'] = "arquivada"
+                    print(f"📦 Tarefa {id_tarefa} ARQUIVADA com sucesso.")
+                else:
+                    print("⚠️ Aviso: Apenas tarefas concluídas podem ser arquivadas.")
+                return
+            atual = atual.proximo
+        print("❌ Erro: ID não encontrado.")
+
 def menu():
     app = OrganizadorTarefas()
     while True:
@@ -134,24 +159,48 @@ def menu():
         print("2. Ordenar Rápido (Merge Sort)")
         print("3. Ordenar Simples (Selection Sort)")
         print("4. Listar Todas")
-        print("5. Salvar e Sair")
+        print("5. Concluir Tarefa")
+        print("6. Arquivar Tarefa")
+        print("7. Salvar e Sair")
         
-        op = input("Escolha: ")
-        if op == "1":
-            tit = input("Título: ")
-            prio = input("Prioridade (urgente/alta/média/baixa): ").lower()
-            app.criar_tarefa(tit, prio)
-        elif op == "2":
-            app.processar_e_ordenar() #Merge sort
-        elif op == "3":
-            app.ordenar_com_selection_sort() #Selection Sort
-        elif op == "4":
-            for t in app.tarefas_encadeadas.para_lista_python():
-                print(f"[{t['prioridade'].upper()}] ID {t['id']}: {t['titulo']}")
-        elif op == "5":
-            app.salvar_dados()
-            print("👋 Saindo...")
-            break
+        op = input("Escolha uma opção: ")
+        
+        try:
+            if op == "1":
+                tit = input("Título: ")
+                prio = input("Prioridade (urgente/alta/média/baixa): ").lower()
+                app.criar_tarefa(tit, prio)
+
+            elif op == "2":
+                app.processar_e_ordenar()
+
+            elif op == "3":
+                app.ordenar_com_selection_sort()
+
+            elif op == "4":
+                lista = app.tarefas_encadeadas.para_lista_python()
+                if not lista:
+                    print("📭 Nenhuma tarefa cadastrada.")
+                for t in lista:
+                    status_icon = "✅" if t['status'] == "concluída" else "📦" if t['status'] == "arquivada" else "⏳"
+                    print(f"{status_icon} [{t['prioridade'].upper()}] ID {t['id']}: {t['titulo']} ({t['status']})")
+
+            elif op == "5":
+                id_sel = int(input("Digite o ID da tarefa para concluir: "))
+                app.concluir_tarefa(id_sel)
+
+            elif op == "6":
+                id_sel = int(input("Digite o ID da tarefa para arquivar: "))
+                app.arquivar_tarefa(id_sel)
+
+            elif op == "7":
+                app.salvar_dados()
+                print("👋 Saindo e salvando dados...")
+                break
+            else:
+                print("❌ Opção inválida.")
+        except ValueError:
+            print("❌ Erro: Por favor, digite um número válido para o ID.")
 
 if __name__ == "__main__":
     menu()
