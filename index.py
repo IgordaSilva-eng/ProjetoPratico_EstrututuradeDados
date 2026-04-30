@@ -3,6 +3,8 @@ import json
 import os
 import time
 
+# --- ESTRUTURAS DE DADOS MANUAIS ---
+
 class No:
     def __init__(self, dado):
         self.dado = dado
@@ -35,6 +37,48 @@ class ListaEncadeadaManual:
     def carregar_de_lista(self, lista_python):
         for item in lista_python:
             self.inserir_no_final(item)
+
+class FilaManual:
+    """Implementação FIFO para gerenciar a ordem de execução das tarefas."""
+    def __init__(self):
+        self.frente = None
+        self.tras = None
+
+    def enqueue(self, tarefa):
+        novo_no = No(tarefa)
+        if self.tras is None:
+            self.frente = self.tras = novo_no
+            return
+        self.tras.proximo = novo_no
+        self.tras = novo_no
+
+    def dequeue(self):
+        if self.frente is None:
+            return None
+        temp = self.frente
+        self.frente = self.frente.proximo
+        if self.frente is None:
+            self.tras = None
+        return temp.dado
+
+class PilhaManual:
+    """Implementação LIFO para o sistema de 'Desfazer' (Undo)."""
+    def __init__(self):
+        self.topo = None
+
+    def push(self, acao):
+        novo_no = No(acao)
+        novo_no.proximo = self.topo
+        self.topo = novo_no
+
+    def pop(self):
+        if self.topo is None:
+            return None
+        temp = self.topo
+        self.topo = self.topo.proximo
+        return temp.dado
+
+# --- ALGORITMOS DE ORDENAÇÃO ---
 
 def merge_sort_tarefas(lista_tarefas):
     if len(lista_tarefas) <= 1:
@@ -74,9 +118,12 @@ def selection_sort_tarefas(lista_tarefas):
         lista_tarefas[i], lista_tarefas[min_idx] = lista_tarefas[min_idx], lista_tarefas[i]
     return lista_tarefas
 
+# --- CLASSE PRINCIPAL ---
+
 class OrganizadorTarefas:
     def __init__(self):
         self.tarefas_encadeadas = ListaEncadeadaManual()
+        self.pilha_undo = PilhaManual()
         self.ARQUIVO = "tarefas.json"
         self.id_contador = 1
         self.carregar_dados()
@@ -105,6 +152,7 @@ class OrganizadorTarefas:
             "data_criacao": datetime.datetime.now().isoformat()
         }
         self.tarefas_encadeadas.inserir_no_final(tarefa)
+        self.pilha_undo.push({"tipo": "criacao", "id": self.id_contador})
         self.id_contador += 1
         print(f"✅ Tarefa '{titulo}' criada!")
 
@@ -115,92 +163,87 @@ class OrganizadorTarefas:
         self.tarefas_encadeadas = ListaEncadeadaManual()
         self.tarefas_encadeadas.carregar_de_lista(lista_ordenada)
         fim = time.perf_counter()
-        print(f"⏱️ Merge Sort concluído em {(fim - inicio)*1000:.4f} ms.", flush=True)
-
-    def ordenar_com_selection_sort(self):
-        inicio = time.perf_counter()
-        lista_temp = self.tarefas_encadeadas.para_lista_python()
-        lista_ordenada = selection_sort_tarefas(lista_temp)
-        self.tarefas_encadeadas = ListaEncadeadaManual()
-        self.tarefas_encadeadas.carregar_de_lista(lista_ordenada)
-        fim = time.perf_counter()
-        print(f"⏱️ Selection Sort concluído em {(fim - inicio)*1000:.4f} ms.", flush=True)
+        print(f"⏱️ Merge Sort concluído em {(fim - inicio)*1000:.4f} ms.")
 
     def concluir_tarefa(self, id_tarefa):
-        """Marca uma tarefa específica como concluída usando busca linear."""
         atual = self.tarefas_encadeadas.cabeca
         while atual:
             if atual.dado['id'] == id_tarefa:
                 atual.dado['status'] = "concluída"
+                self.pilha_undo.push({"tipo": "conclusao", "id": id_tarefa})
                 print(f"✔️ Tarefa {id_tarefa} marcada como CONCLUÍDA.")
                 return
             atual = atual.proximo
         print("❌ Erro: ID não encontrado.")
 
-    def arquivar_tarefa(self, id_tarefa):
-        """Altera o status para arquivado. Ela permanece na lista."""
+    def sugerir_proxima_tarefa(self):
+        """Usa a lógica de Fila (FIFO) para sugerir a próxima tarefa pendente."""
+        fila_execucao = FilaManual()
         atual = self.tarefas_encadeadas.cabeca
         while atual:
-            if atual.dado['id'] == id_tarefa:
-                if atual.dado['status'] == "concluída":
-                    atual.dado['status'] = "arquivada"
-                    print(f"📦 Tarefa {id_tarefa} ARQUIVADA com sucesso.")
-                else:
-                    print("⚠️ Aviso: Apenas tarefas concluídas podem ser arquivadas.")
-                return
+            if atual.dado['status'] == "pendente":
+                fila_execucao.enqueue(atual.dado)
             atual = atual.proximo
-        print("❌ Erro: ID não encontrado.")
+        
+        proxima = fila_execucao.dequeue()
+        if proxima:
+            print(f"📌 Sugestão (FIFO): Próxima tarefa a realizar é '{proxima['titulo']}'")
+        else:
+            print("📭 Nenhuma tarefa pendente na fila.")
+
+    def desfazer_ultima_acao(self):
+        """Usa a lógica de Pilha (LIFO) para reverter a última alteração de status."""
+        ultima_acao = self.pilha_undo.pop()
+        if not ultima_acao:
+            print("⚠️ Nada para desfazer.")
+            return
+
+        if ultima_acao['tipo'] == "conclusao":
+            atual = self.tarefas_encadeadas.cabeca
+            while atual:
+                if atual.dado['id'] == ultima_acao['id']:
+                    atual.dado['status'] = "pendente"
+                    print(f"⏪ Desfeito: Tarefa {ultima_acao['id']} voltou para PENDENTE.")
+                    return
+                atual = atual.proximo
+        else:
+            print("ℹ️ Ação de criação não pode ser revertida nesta versão.")
+
+# --- MENU INTERATIVO ---
 
 def menu():
     app = OrganizadorTarefas()
     while True:
         print("\n--- Organizador de Tarefas Acadêmico ---")
         print("1. Criar Tarefa")
-        print("2. Ordenar Rápido (Merge Sort)")
-        print("3. Ordenar Simples (Selection Sort)")
-        print("4. Listar Todas")
-        print("5. Concluir Tarefa")
-        print("6. Arquivar Tarefa")
+        print("2. Ordenar (Merge Sort)")
+        print("3. Listar Todas")
+        print("4. Concluir Tarefa")
+        print("5. Sugerir Próxima (Fila/FIFO)")
+        print("6. Desfazer Última Ação (Pilha/LIFO)")
         print("7. Salvar e Sair")
         
-        op = input("Escolha uma opção: ")
+        op = input("Escolha: ")
         
-        try:
-            if op == "1":
-                tit = input("Título: ")
-                prio = input("Prioridade (urgente/alta/média/baixa): ").lower()
-                app.criar_tarefa(tit, prio)
-
-            elif op == "2":
-                app.processar_e_ordenar()
-
-            elif op == "3":
-                app.ordenar_com_selection_sort()
-
-            elif op == "4":
-                lista = app.tarefas_encadeadas.para_lista_python()
-                if not lista:
-                    print("📭 Nenhuma tarefa cadastrada.")
-                for t in lista:
-                    status_icon = "✅" if t['status'] == "concluída" else "📦" if t['status'] == "arquivada" else "⏳"
-                    print(f"{status_icon} [{t['prioridade'].upper()}] ID {t['id']}: {t['titulo']} ({t['status']})")
-
-            elif op == "5":
-                id_sel = int(input("Digite o ID da tarefa para concluir: "))
-                app.concluir_tarefa(id_sel)
-
-            elif op == "6":
-                id_sel = int(input("Digite o ID da tarefa para arquivar: "))
-                app.arquivar_tarefa(id_sel)
-
-            elif op == "7":
-                app.salvar_dados()
-                print("👋 Saindo e salvando dados...")
-                break
-            else:
-                print("❌ Opção inválida.")
-        except ValueError:
-            print("❌ Erro: Por favor, digite um número válido para o ID.")
+        if op == "1":
+            tit = input("Título: ")
+            prio = input("Prioridade (urgente/alta/média/baixa): ").lower()
+            app.criar_tarefa(tit, prio)
+        elif op == "2":
+            app.processar_e_ordenar()
+        elif op == "3":
+            for t in app.tarefas_encadeadas.para_lista_python():
+                print(f"[{t['prioridade'].upper()}] ID {t['id']}: {t['titulo']} ({t['status']})")
+        elif op == "4":
+            id_sel = int(input("ID para concluir: "))
+            app.concluir_tarefa(id_sel)
+        elif op == "5":
+            app.sugerir_proxima_tarefa()
+        elif op == "6":
+            app.desfazer_ultima_acao()
+        elif op == "7":
+            app.salvar_dados()
+            break
 
 if __name__ == "__main__":
     menu()

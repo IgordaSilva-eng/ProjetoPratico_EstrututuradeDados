@@ -6,7 +6,7 @@ from index import merge_sort_tarefas, selection_sort_tarefas
 
 def executar_comparativo_estatistico():
     # Volumes graduais para mostrar a curva de crescimento
-    volumes = [5000, 10000, 25000, 100000] 
+    volumes = [5000, 10000, 25000, 50000] 
     prioridades = ["urgente", "alta", "média", "baixa"]
     
     print("="*50)
