@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador de Tarefas Acadêmico Manual</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container-app">
+        <aside class="barra-lateral">
+            <div class="logo">
+                <span class="icone-logo">📊</span>
+                <div class="texto-logo">
+                    <strong>Gerenciador de Tarefas Acadêmico</strong>
+                    <span>Manual</span>
+                </div>
+            </div>
+
+            <button class="btn-nova-tarefa">Nova Tarefa <span>+</span></button>
+
+            <nav class="menu-tarefas">
+                <p class="menu-titulo">Menu de Tarefas</p>
+                <ul>
+                    <li class="ativo">
+                        <span>📄 Tarefas</span>
+                        <span class="badge">{% if tarefas %}{{ tarefas | length }}{% else %}0{% endif %}</span>
+                    </li>
+                    <li>
+                        <span>📅 Hoje</span>
+                        <span class="badge">{% if tarefas %}{{ tarefas | length }}{% else %}0{% endif %}</span>
+                    </li>
+                    <li>
+                        <span>⭐ Prioridades</span>
+                        <span class="badge">{% if tarefas %}{{ tarefas | selectattr('prioridade', 'equalto', 'alta') | list | length }}{% else %}0{% endif %}</span>
+                    </li>
+                    <li>
+                        <span>📁 Projetos</span>
+                        <span class="badge">0</span>
+                    </li>
+                    <li>
+                        <span>🗄️ Arquivadas</span>
+                        <span class="badge">0</span>
+                    </li>
+                    <li class="item-teste">
+                        <a href="/executar-teste" class="link-teste">
+                            <span>🚀 Testar Escalabilidade</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="conteudo-principal">
+            <header class="barra-superior">
+                <div class="espacamento"></div>
+                <div class="acoes-usuario">
+                    <span class="avatar">👩‍💼</span>
+                    <span class="notificacao">
+                        🔔<span class="ponto"></span>
+                    </span>
+                </div>
+            </header>
+
+            <form action="/criar" method="POST" class="criador-tarefa">
+                <div class="cabecalho-tarefa">
+                    <input type="text" name="titulo" placeholder="Título da Tarefa ex.: Relatório Final" class="input-titulo" required>
+                    <button type="submit" class="btn-criar">Criar Tarefa ✓</button>
+                </div>
+
+                <div class="corpo-tarefa">
+                    <div class="container-editor">
+                        <div class="barra-ferramentas">
+                            <button type="button"><b>B</b></button>
+                            <button type="button"><i>I</i></button>
+                            <button type="button">⚏</button>
+                            <button type="button">≣</button>
+                        </div>
+                        <textarea name="disciplina" placeholder="Adicione uma descrição detalhada aqui... Use listas, formatação ou anexe arquivos.
+                        
+- Complete análises de tarefas complexas.
+- Demarque os pontos principais."></textarea>
+                    </div>
+
+                    <div class="painel-prioridade">
+                        <h3>Prioridade:</h3>
+                        <p>definir status de prioridade</p>
+                        <select name="prioridade" class="select-prioridade">
+                            <option value="alta">🔴 Alta (Bandeira Vermelha)</option>
+                            <option value="média" selected>🟡 Média (Bandeira Amarela)</option>
+                            <option value="baixa">🔵 Baixa (Bandeira Azul)</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+
+            {% if dashboard %}
+            <div class="dashboard-container">
+                <h2 class="titulo-secao">📊 Dashboard de Performance</h2>
+                <div class="dashboard-cards">
+                    <div class="card-teste card-volume">
+                        <p>Volume Testado</p>
+                        <h3>{{ dashboard.volume }} itens</h3>
+                    </div>
+                    <div class="card-teste card-merge">
+                        <p>Merge Sort O(n log n)</p>
+                        <h3>{{ dashboard.tempo_merge }} ms</h3>
+                    </div>
+                    <div class="card-teste card-selection">
+                        <p>Selection Sort O(n²)</p>
+                        <h3>{{ dashboard.tempo_selection }} ms</h3>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="lista-tarefas-container">
+                <h2 class="titulo-secao">Tarefas Cadastradas</h2>
+                
+                {% if tarefas %}
+                    {% for t in tarefas %}
+                        <div class="tarefa-item">
+                            <div class="tarefa-info">
+                                <span class="badge badge-{{ t['prioridade'] | replace('é', 'e') }}">
+                                    {{ t['prioridade'] | upper }}
+                                </span>
+                                <h4 class="tarefa-titulo">{{ t.titulo }}</h4>
+                                <p class="tarefa-desc">{{ t.disciplina }}</p>
+                            </div>
+                            <div class="tarefa-acao">
+                                {% if t.status == 'pendente' %}
+                                    <a href="/concluir/{{ t.id }}" class="link-concluir">
+                                        <button type="button" class="btn-concluir">Concluir</button>
+                                    </a>
+                                {% else %}
+                                    <span class="texto-concluida">✓ Concluída</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="texto-vazio">Nenhuma tarefa pendente.</p>
+                {% endif %}
+            </div>
+        </main>
+    </div>
+</body>
+</html>

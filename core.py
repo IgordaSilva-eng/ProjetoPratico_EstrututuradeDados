@@ -1,10 +1,10 @@
+# core.py
 import datetime
 import json
 import os
 import time
 
 # --- ESTRUTURAS DE DADOS MANUAIS ---
-
 class No:
     def __init__(self, dado):
         self.dado = dado
@@ -79,7 +79,6 @@ class PilhaManual:
         return temp.dado
 
 # --- ALGORITMOS DE ORDENAÇÃO ---
-
 def merge_sort_tarefas(lista_tarefas):
     if len(lista_tarefas) <= 1:
         return lista_tarefas
@@ -119,7 +118,6 @@ def selection_sort_tarefas(lista_tarefas):
     return lista_tarefas
 
 # --- CLASSE PRINCIPAL ---
-
 class OrganizadorTarefas:
     def __init__(self):
         self.tarefas_encadeadas = ListaEncadeadaManual()
@@ -156,7 +154,7 @@ class OrganizadorTarefas:
         self.tarefas_encadeadas.inserir_no_final(tarefa)
         self.pilha_undo.push({"tipo": "criacao", "id": self.id_contador})
         self.id_contador += 1
-        print(f"✅ Tarefa '{titulo}' de {disciplina} (Entrega: {prazo}) criada!")
+        return f" Tarefa '{titulo}' de {disciplina} (Entrega: {prazo}) criada!"
 
     def processar_e_ordenar(self):
         inicio = time.perf_counter()
@@ -165,7 +163,11 @@ class OrganizadorTarefas:
         self.tarefas_encadeadas = ListaEncadeadaManual()
         self.tarefas_encadeadas.carregar_de_lista(lista_ordenada)
         fim = time.perf_counter()
-        print(f"⏱️ Merge Sort concluído em {(fim - inicio)*1000:.4f} ms.")
+        return f" Merge Sort concluído em {(fim - inicio)*1000:.4f} ms."
+
+    def listar_tarefas(self):
+        """Retorna a lista de tarefas para a interface renderizar."""
+        return self.tarefas_encadeadas.para_lista_python()
 
     def concluir_tarefa(self, id_tarefa):
         atual = self.tarefas_encadeadas.cabeca
@@ -173,13 +175,11 @@ class OrganizadorTarefas:
             if atual.dado['id'] == id_tarefa:
                 atual.dado['status'] = "concluída"
                 self.pilha_undo.push({"tipo": "conclusao", "id": id_tarefa})
-                print(f"✔️ Tarefa {id_tarefa} marcada como CONCLUÍDA.")
-                return
+                return f"✔️ Tarefa {id_tarefa} marcada como CONCLUÍDA."
             atual = atual.proximo
-        print("❌ Erro: ID não encontrado.")
+        return " Erro: ID não encontrado."
 
     def sugerir_proxima_tarefa(self):
-        """Usa a lógica de Fila (FIFO) para sugerir a próxima tarefa pendente."""
         fila_execucao = FilaManual()
         atual = self.tarefas_encadeadas.cabeca
         while atual:
@@ -187,75 +187,20 @@ class OrganizadorTarefas:
                 fila_execucao.enqueue(atual.dado)
             atual = atual.proximo
         
-        proxima = fila_execucao.dequeue()
-        if proxima:
-            print(f"📌 Sugestão (FIFO): Próxima tarefa a realizar é '{proxima['titulo']}'")
-        else:
-            print("📭 Nenhuma tarefa pendente na fila.")
+        # Retorna o dicionário da tarefa ou None. A interface decide o que imprimir.
+        return fila_execucao.dequeue() 
 
     def desfazer_ultima_acao(self):
-        """Usa a lógica de Pilha (LIFO) para reverter a última alteração de status."""
         ultima_acao = self.pilha_undo.pop()
         if not ultima_acao:
-            print("⚠️ Nada para desfazer.")
-            return
+            return " Nada para desfazer."
 
         if ultima_acao['tipo'] == "conclusao":
             atual = self.tarefas_encadeadas.cabeca
             while atual:
                 if atual.dado['id'] == ultima_acao['id']:
                     atual.dado['status'] = "pendente"
-                    print(f"⏪ Desfeito: Tarefa {ultima_acao['id']} voltou para PENDENTE.")
-                    return
+                    return f" Desfeito: Tarefa {ultima_acao['id']} voltou para PENDENTE."
                 atual = atual.proximo
         else:
-            print("ℹ️ Ação de criação não pode ser revertida nesta versão.")
-
-# --- MENU INTERATIVO ---
-
-def menu():
-    app = OrganizadorTarefas()
-    while True:
-        print("\n--- Organizador de Tarefas Acadêmico ---")
-        print("1. Criar Tarefa")
-        print("2. Ordenar (Merge Sort)")
-        print("3. Listar Todas")
-        print("4. Concluir Tarefa")
-        print("5. Sugerir Próxima (Fila/FIFO)")
-        print("6. Desfazer Última Ação (Pilha/LIFO)")
-        print("7. Salvar e Sair")
-        
-        op = input("Escolha: ")
-        
-        if op == "1":
-            tit = input("Título da Tarefa: ")
-            disc = input("Disciplina: ")
-            prazo = input("Prazo de Entrega (dd/mm/aaaa): ")
-            prio = input("Prioridade (urgente/alta/média/baixa): ").lower()
-            # Chamada atualizada com disciplina e prazo
-            app.criar_tarefa(tit, prio, disc, prazo)
-
-        elif op == "2":
-            app.processar_e_ordenar()
-
-        elif op == "3":
-            print("\n--- LISTA DE TAREFAS ACADÊMICAS ---")
-            for t in app.tarefas_encadeadas.para_lista_python():
-                # Exibição detalhada incluindo disciplina e prazo
-                info = f"[{t['prioridade'].upper()}] ID {t['id']}: {t['titulo']}"
-                detalhes = f" | Disciplina: {t['disciplina']} | Prazo: {t['prazo']} | Status: {t['status']}"
-                print(info + detalhes)
-                
-        elif op == "4":
-            id_sel = int(input("ID para concluir: "))
-            app.concluir_tarefa(id_sel)
-        elif op == "5":
-            app.sugerir_proxima_tarefa()
-        elif op == "6":
-            app.desfazer_ultima_acao()
-        elif op == "7":
-            app.salvar_dados()
-            break
-
-if __name__ == "__main__":
-    menu()
+            return " Ação de criação não pode ser revertida nesta versão."
