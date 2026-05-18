@@ -46,23 +46,23 @@ class FilaManual:
 
     def enqueue(self, tarefa):
         novo_no = No(tarefa)
-        if self.tras is None:
+        if not self.tras:
             self.frente = self.tras = novo_no
             return
         self.tras.proximo = novo_no
         self.tras = novo_no
 
     def dequeue(self):
-        if self.frente is None:
+        if not self.frente:
             return None
         temp = self.frente
         self.frente = self.frente.proximo
-        if self.frente is None:
+        if not self.frente:
             self.tras = None
         return temp.dado
 
 class PilhaManual:
-    """Implementação LIFO para o sistema de 'Desfazer' (Undo)."""
+    """Implementação LIFO para gerenciar o histórico de ações (Undo)."""
     def __init__(self):
         self.topo = None
 
@@ -72,102 +72,88 @@ class PilhaManual:
         self.topo = novo_no
 
     def pop(self):
-        if self.topo is None:
+        if not self.topo:
             return None
         temp = self.topo
         self.topo = self.topo.proximo
         return temp.dado
 
-# --- ALGORITMOS DE ORDENAÇÃO ---
-def merge_sort_tarefas(lista_tarefas):
-    if len(lista_tarefas) <= 1:
-        return lista_tarefas
-    meio = len(lista_tarefas) // 2
-    esquerda = merge_sort_tarefas(lista_tarefas[:meio])
-    direita = merge_sort_tarefas(lista_tarefas[meio:])
-    return merge(esquerda, direita)
+# --- ALGORITMOS DE ORDENAÇÃO MANUAIS ---
+def mapear_prioridade(p):
+    pesos = {"urgente": 4, "alta": 3, "média": 2, "baixa": 1}
+    return pesos.get(p.lower(), 0)
 
-def merge(esquerda, direita):
+def merge_sort_tarefas(lista):
+    if len(lista) <= 1:
+        return lista
+    meio = len(lista) // 2
+    esq = merge_sort_tarefas(lista[:meio])
+    dir = merge_sort_tarefas(lista[meio:])
+    
     resultado = []
     i = j = 0
-    prioridades = {"urgente": 0, "alta": 1, "média": 2, "baixa": 3}
-    while i < len(esquerda) and j < len(direita):
-        prio_esq = prioridades.get(esquerda[i]['prioridade'].lower(), 4)
-        prio_dir = prioridades.get(direita[j]['prioridade'].lower(), 4)
-        if prio_esq <= prio_dir:
-            resultado.append(esquerda[i])
+    while i < len(esq) and j < len(dir):
+        if mapear_prioridade(esq[i]['prioridade']) >= mapear_prioridade(dir[j]['prioridade']):
+            resultado.append(esq[i])
             i += 1
         else:
-            resultado.append(direita[j])
+            resultado.append(dir[j])
             j += 1
-    resultado.extend(esquerda[i:])
-    resultado.extend(direita[j:])
+    resultado.extend(esq[i:])
+    resultado.extend(dir[j:])
     return resultado
 
-def selection_sort_tarefas(lista_tarefas):
-    n = len(lista_tarefas)
-    prioridades = {"urgente": 0, "alta": 1, "média": 2, "baixa": 3}
+def selection_sort_tarefas(lista):
+    n = len(lista)
     for i in range(n):
-        min_idx = i
+        max_idx = i
         for j in range(i + 1, n):
-            prio_j = prioridades.get(lista_tarefas[j]['prioridade'].lower(), 4)
-            prio_min = prioridades.get(lista_tarefas[min_idx]['prioridade'].lower(), 4)
-            if prio_j < prio_min:
-                min_idx = j
-        lista_tarefas[i], lista_tarefas[min_idx] = lista_tarefas[min_idx], lista_tarefas[i]
-    return lista_tarefas
+            if mapear_prioridade(lista[j]['prioridade']) > mapear_prioridade(lista[max_idx]['prioridade']):
+                max_idx = j
+        lista[i], lista[max_idx] = lista[max_idx], lista[i]
+    return lista
 
-# --- CLASSE PRINCIPAL ---
+# --- CONTROLADOR CENTRAL ---
 class OrganizadorTarefas:
-    def __init__(self):
+    def __init__(self, arquivo_dados="tarefas.json"):
+        self.arquivo_dados = arquivo_dados
         self.tarefas_encadeadas = ListaEncadeadaManual()
         self.pilha_undo = PilhaManual()
-        self.ARQUIVO = "tarefas.json"
-        self.id_contador = 1
+        self.proximo_id = 1
         self.carregar_dados()
-
-    def carregar_dados(self):
-        if os.path.exists(self.ARQUIVO):
-            try:
-                with open(self.ARQUIVO, 'r', encoding='utf-8') as f:
-                    dados = json.load(f)
-                    self.tarefas_encadeadas.carregar_de_lista(dados)
-                    if dados:
-                        self.id_contador = max(t['id'] for t in dados) + 1
-            except:
-                pass
-
-    def salvar_dados(self):
-        with open(self.ARQUIVO, 'w', encoding='utf-8') as f:
-            json.dump(self.tarefas_encadeadas.para_lista_python(), f, indent=4)
 
     def criar_tarefa(self, titulo, prioridade, disciplina, prazo):
         tarefa = {
-            "id": self.id_contador,
+            "id": self.proximo_id,
             "titulo": titulo,
+            "prioridade": prioridade,
             "disciplina": disciplina,
             "prazo": prazo,
-            "prioridade": prioridade,
             "status": "pendente",
-            "data_criacao": datetime.datetime.now().isoformat()
+            "data_criacao": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
         self.tarefas_encadeadas.inserir_no_final(tarefa)
-        self.pilha_undo.push({"tipo": "criacao", "id": self.id_contador})
-        self.id_contador += 1
-        return f" Tarefa '{titulo}' de {disciplina} (Entrega: {prazo}) criada!"
-
-    def processar_e_ordenar(self):
-        inicio = time.perf_counter()
-        lista_temp = self.tarefas_encadeadas.para_lista_python()
-        lista_ordenada = merge_sort_tarefas(lista_temp)
-        self.tarefas_encadeadas = ListaEncadeadaManual()
-        self.tarefas_encadeadas.carregar_de_lista(lista_ordenada)
-        fim = time.perf_counter()
-        return f" Merge Sort concluído em {(fim - inicio)*1000:.4f} ms."
+        self.proximo_id += 1
+        return tarefa
 
     def listar_tarefas(self):
-        """Retorna a lista de tarefas para a interface renderizar."""
         return self.tarefas_encadeadas.para_lista_python()
+
+    def processar_e_ordenar(self, algoritmo="merge"):
+        lista_temp = self.listar_tarefas()
+        t0 = time.perf_counter()
+        
+        if algoritmo == "selection":
+            lista_ordenada = selection_sort_tarefas(lista_temp)
+        else:
+            lista_ordenada = merge_sort_tarefas(lista_temp)
+            
+        tempo_gasto = (time.perf_counter() - t0) * 1000
+        
+        # Reconstrói a lista encadeada interna ordenada
+        self.tarefas_encadeadas = ListaEncadeadaManual()
+        self.tarefas_encadeadas.carregar_de_lista(lista_ordenada)
+        return round(tempo_gasto, 4)
 
     def concluir_tarefa(self, id_tarefa):
         atual = self.tarefas_encadeadas.cabeca
@@ -175,9 +161,9 @@ class OrganizadorTarefas:
             if atual.dado['id'] == id_tarefa:
                 atual.dado['status'] = "concluída"
                 self.pilha_undo.push({"tipo": "conclusao", "id": id_tarefa})
-                return f"✔️ Tarefa {id_tarefa} marcada como CONCLUÍDA."
+                return True
             atual = atual.proximo
-        return " Erro: ID não encontrado."
+        return False
 
     def sugerir_proxima_tarefa(self):
         fila_execucao = FilaManual()
@@ -186,21 +172,33 @@ class OrganizadorTarefas:
             if atual.dado['status'] == "pendente":
                 fila_execucao.enqueue(atual.dado)
             atual = atual.proximo
-        
-        # Retorna o dicionário da tarefa ou None. A interface decide o que imprimir.
-        return fila_execucao.dequeue() 
+        return fila_execucao.dequeue()
 
     def desfazer_ultima_acao(self):
         ultima_acao = self.pilha_undo.pop()
         if not ultima_acao:
-            return " Nada para desfazer."
+            return False
 
         if ultima_acao['tipo'] == "conclusao":
             atual = self.tarefas_encadeadas.cabeca
             while atual:
                 if atual.dado['id'] == ultima_acao['id']:
                     atual.dado['status'] = "pendente"
-                    return f" Desfeito: Tarefa {ultima_acao['id']} voltou para PENDENTE."
+                    return True
                 atual = atual.proximo
-        else:
-            return " Ação de criação não pode ser revertida nesta versão."
+        return False
+
+    def salvar_dados(self):
+        with open(self.arquivo_dados, 'w', encoding='utf-8') as f:
+            json.dump(self.listar_tarefas(), f, ensure_ascii=False, indent=4)
+
+    def carregar_dados(self):
+        if os.path.exists(self.arquivo_dados):
+            try:
+                with open(self.arquivo_dados, 'r', encoding='utf-8') as f:
+                    dados = json.load(f)
+                    if dados:
+                        self.tarefas_encadeadas.carregar_de_lista(dados)
+                        self.proximo_id = max(t['id'] for t in dados) + 1
+            except Exception:
+                pass

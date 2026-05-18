@@ -12,125 +12,119 @@
             <div class="logo">
                 <span class="icone-logo">📊</span>
                 <div class="texto-logo">
-                    <strong>Gerenciador de Tarefas Acadêmico</strong>
-                    <span>Manual</span>
+                    <strong>Gerenciador de Tarefas</strong>
+                    <span>Estruturas de Dados I</span>
                 </div>
             </div>
 
-            <button class="btn-nova-tarefa">Nova Tarefa <span>+</span></button>
+            <div class="bloco-undo">
+                <a href="/desfazer" class="link-undo">
+                    <button type="button" class="btn-undo">
+                        ↩️ Desfazer Última Ação
+                    </button>
+                </a>
+            </div>
+
+            <div class="bloco-ordenacao">
+                <p class="menu-titulo">Ordenar Lista Real</p>
+                <a href="/ordenar/merge" class="link-sort">
+                    <button type="button" class="btn-sort btn-sort-merge">Usar Merge Sort</button>
+                </a>
+                <a href="/ordenar/selection" class="link-sort">
+                    <button type="button" class="btn-sort btn-sort-selection">Usar Selection Sort</button>
+                </a>
+            </div>
 
             <nav class="menu-tarefas">
-                <p class="menu-titulo">Menu de Tarefas</p>
+                <p class="menu-titulo">Estatísticas Básicas</p>
                 <ul>
-                    <li class="ativo">
-                        <span>📄 Tarefas</span>
-                        <span class="badge">{% if tarefas %}{{ tarefas | length }}{% else %}0{% endif %}</span>
-                    </li>
-                    <li>
-                        <span>📅 Hoje</span>
-                        <span class="badge">{% if tarefas %}{{ tarefas | length }}{% else %}0{% endif %}</span>
-                    </li>
-                    <li>
-                        <span>⭐ Prioridades</span>
-                        <span class="badge">{% if tarefas %}{{ tarefas | selectattr('prioridade', 'equalto', 'alta') | list | length }}{% else %}0{% endif %}</span>
-                    </li>
-                    <li>
-                        <span>📁 Projetos</span>
-                        <span class="badge">0</span>
-                    </li>
-                    <li>
-                        <span>🗄️ Arquivadas</span>
-                        <span class="badge">0</span>
-                    </li>
-                    <li class="item-teste">
-                        <a href="/executar-teste" class="link-teste">
-                            <span>🚀 Testar Escalabilidade</span>
-                        </a>
+                    <li class="item-estatistica">
+                        <span>📄 Total em Memória:</span>
+                        <span class="badge-total">
+                            {% if tarefas %}{{ tarefas | length }}{% else %}0{% endif %}
+                        </span>
                     </li>
                 </ul>
             </nav>
         </aside>
 
         <main class="conteudo-principal">
-            <header class="barra-superior">
-                <div class="espacamento"></div>
-                <div class="acoes-usuario">
-                    <span class="avatar">👩‍💼</span>
-                    <span class="notificacao">
-                        🔔<span class="ponto"></span>
-                    </span>
-                </div>
-            </header>
-
-            <form action="/criar" method="POST" class="criador-tarefa">
-                <div class="cabecalho-tarefa">
-                    <input type="text" name="titulo" placeholder="Título da Tarefa ex.: Relatório Final" class="input-titulo" required>
-                    <button type="submit" class="btn-criar">Criar Tarefa ✓</button>
-                </div>
-
-                <div class="corpo-tarefa">
-                    <div class="container-editor">
-                        <div class="barra-ferramentas">
-                            <button type="button"><b>B</b></button>
-                            <button type="button"><i>I</i></button>
-                            <button type="button">⚏</button>
-                            <button type="button">≣</button>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alerta-sistema {{ category }}">
+                            <strong>Aviso:</strong> {{ message }}
                         </div>
-                        <textarea name="disciplina" placeholder="Adicione uma descrição detalhada aqui... Use listas, formatação ou anexe arquivos.
-                        
-- Complete análises de tarefas complexas.
-- Demarque os pontos principais."></textarea>
-                    </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
 
-                    <div class="painel-prioridade">
-                        <h3>Prioridade:</h3>
-                        <p>definir status de prioridade</p>
-                        <select name="prioridade" class="select-prioridade">
-                            <option value="alta">🔴 Alta (Bandeira Vermelha)</option>
-                            <option value="média" selected>🟡 Média (Bandeira Amarela)</option>
-                            <option value="baixa">🔵 Baixa (Bandeira Azul)</option>
-                        </select>
-                    </div>
-                </div>
-            </form>
-
-            {% if dashboard %}
-            <div class="dashboard-container">
-                <h2 class="titulo-secao">📊 Dashboard de Performance</h2>
-                <div class="dashboard-cards">
-                    <div class="card-teste card-volume">
-                        <p>Volume Testado</p>
-                        <h3>{{ dashboard.volume }} itens</h3>
-                    </div>
-                    <div class="card-teste card-merge">
-                        <p>Merge Sort O(n log n)</p>
-                        <h3>{{ dashboard.tempo_merge }} ms</h3>
-                    </div>
-                    <div class="card-teste card-selection">
-                        <p>Selection Sort O(n²)</p>
-                        <h3>{{ dashboard.tempo_selection }} ms</h3>
-                    </div>
+            {% if sugestao %}
+            <div class="card-sugestao-fila">
+                <div class="card-info">
+                    <p class="sugestao-titulo">💡 RECOMENDAÇÃO ATUAL (FILA FIFO):</p>
+                    <h3 class="sugestao-subtitulo">{{ sugestao.titulo }} <span class="sugestao-disciplina">[{{ sugestao.disciplina }}]</span></h3>
                 </div>
             </div>
             {% endif %}
 
+            <div class="formulario-container">
+                <div class="formulario-card">
+                    <h2 class="titulo-secao">Nova Atividade Acadêmica</h2>
+                    <form action="/criar" method="POST" class="form-grid">
+                        <input type="text" name="titulo" placeholder="Título da Tarefa" required class="input-padrao">
+                        <input type="text" name="disciplina" placeholder="Disciplina" required class="input-padrao">
+                        <input type="date" name="prazo" required class="input-padrao input-data">
+                        <select name="prioridade" required class="select-padrao">
+                            <option value="baixa">Baixa</option>
+                            <option value="média">Média</option>
+                            <option value="alta">Alta</option>
+                            <option value="urgente">Urgente</option>
+                        </select>
+                        <button type="submit" class="btn-submeter">Cadastrar na Lista Encadeada</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="dashboard-container">
+                <div class="cabecalho-dashboard">
+                    <h2 class="titulo-secao">Painel de Telemetria (Estresse sob Carga)</h2>
+                    <a href="/executar-teste"><button class="btn-atualizar">Testar Carga com 10.000 Itens 🔄</button></a>
+                </div>
+
+                <div class="cards-grid">
+                    <div class="card-telemetria card-volume">
+                        <p class="card-label">Massa do Teste</p>
+                        <h3 class="card-valor">{% if dashboard %}{{ dashboard.volume }}{% else %}0{% endif %} <span class="unidade">itens</span></h3>
+                    </div>
+                    <div class="card-telemetria card-merge">
+                        <p class="card-label">Merge Sort (O(n log n))</p>
+                        <h3 class="card-valor">{% if dashboard %}{{ dashboard.tempo_merge }}{% else %}0.00{% endif %} <span class="unidade">ms</span></h3>
+                    </div>
+                    <div class="card-telemetria card-selection">
+                        <p class="card-label">Selection Sort (O(n²))</p>
+                        <h3 class="card-valor">{% if dashboard %}{{ dashboard.tempo_selection }}{% else %}0.00{% endif %} <span class="unidade">ms</span></h3>
+                    </div>
+                </div>
+            </div>
+
             <div class="lista-tarefas-container">
-                <h2 class="titulo-secao">Tarefas Cadastradas</h2>
-                
+                <h2 class="titulo-secao">Fila Real de Diretrizes Acadêmicas</h2>
                 {% if tarefas %}
                     {% for t in tarefas %}
-                        <div class="tarefa-item">
+                        <div class="tarefa-item estado-{{ t.status }}">
                             <div class="tarefa-info">
-                                <span class="badge badge-{{ t['prioridade'] | replace('é', 'e') }}">
-                                    {{ t['prioridade'] | upper }}
+                                <span class="badge-prioridade prioridade-{{ t.prioridade | replace('é', 'e') }}">
+                                    {{ t.prioridade | upper }}
                                 </span>
-                                <h4 class="tarefa-titulo">{{ t.titulo }}</h4>
-                                <p class="tarefa-desc">{{ t.disciplina }}</p>
+                                <h4 class="tarefa-item-titulo">{{ t.titulo }}</h4>
+                                <p class="tarefa-item-desc">{{ t.disciplina }} | Prazo: {{ t.prazo }}</p>
                             </div>
                             <div class="tarefa-acao">
                                 {% if t.status == 'pendente' %}
-                                    <a href="/concluir/{{ t.id }}" class="link-concluir">
-                                        <button type="button" class="btn-concluir">Concluir</button>
+                                    <a href="/concluir/{{ t.id }}">
+                                        <button type="button" class="btn-concluir-item">Concluir</button>
                                     </a>
                                 {% else %}
                                     <span class="texto-concluida">✓ Concluída</span>
@@ -139,7 +133,7 @@
                         </div>
                     {% endfor %}
                 {% else %}
-                    <p class="texto-vazio">Nenhuma tarefa pendente.</p>
+                    <p class="texto-vazio">Nenhuma tarefa cadastrada na Lista Encadeada.</p>
                 {% endif %}
             </div>
         </main>
